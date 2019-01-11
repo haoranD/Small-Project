@@ -10,24 +10,18 @@ from pathlib import Path
 from resnet import resnet18
 from train import Trainer
 import random
+import scipy.io
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import datasets, transforms
-import scipy.io
-
 
 model = resnet18(num_classes=4)
-# model.load_state_dict(torch.load('./models/model_epoch_99.pth')["weight"])
-model.load_state_dict(torch.load('./models/model_epoch_99.pth'))
+model.load_state_dict(torch.load('./models/model_epoch_99.pth')["weight"])
 model.fc = nn.Sequential()
 model = model.eval()
-
-
-print(model)
-
 
 train_dir = './Data/train_data/'
 test_dir = './Data/test_data/'
@@ -43,23 +37,23 @@ train = datasets.ImageFolder(traindir,transforms.Compose(to_normalized_tensor))
 test = datasets.ImageFolder(testdir, transforms.Compose(to_normalized_tensor))
 
 
-train_loader = DataLoader(train, batch_size = batch_size, shuffle=False, num_workers=8)
+train_loader = DataLoader(train, batch_size = batch_size, shuffle=False, num_workers=2)
 test_loader = DataLoader(test, batch_size=batch_size,shuffle=False, num_workers=8)
 
-
 output_train = []
+count = 0
 for data, target in train_loader:
-    tmp = model(data)
-    output_train.append(tmp)
-
+     print(count)
+     count += 1
+     tmp = model(data)
+     output_train.append(tmp.detach().numpy())
 
 output_test = []
-for data, target in test_loader:
-    tmp1 = model(data)
-    output_test.append(tmp1)
+for data2, target2 in test_loader:
+    tmp1 = model(data2)
+    output_test.append(tmp1.detach().numpy())
 
-
-result_test = {'features': output_test}
-result_train = {'features',output_train}
-scipy.io.mat(result_test)
-scipy.io.mat(result_train)
+result_test = {'feature':output_test}
+result_train = {'feature':output_train}
+scipy.io.savemat('tarin.mat',result_train)
+scipy.io.savemat('test.mat',result_test)
